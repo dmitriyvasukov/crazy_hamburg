@@ -20,7 +20,14 @@ async def create_payment(
     """
     Создать платёж для заказа
     """
-    order = db.query(Order).filter(Order.id == order_id).first()
+    from sqlalchemy.orm import joinedload
+    from app.models.product import Product
+    
+    # Load order with all necessary relationships to avoid lazy loading issues
+    order = db.query(Order).options(
+        joinedload(Order.user),
+        joinedload(Order.items).joinedload("product")
+    ).filter(Order.id == order_id).first()
     
     if not order:
         raise HTTPException(

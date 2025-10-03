@@ -64,7 +64,7 @@ async def login(credentials: UserLogin, db: Session = Depends(get_db)):
         )
     
     # Create access token
-    access_token = create_access_token(data={"sub": user.id})
+    access_token = create_access_token(data={"sub": str(user.id)})
     
     return Token(
         access_token=access_token,

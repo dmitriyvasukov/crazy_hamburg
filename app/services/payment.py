@@ -24,11 +24,18 @@ class PaymentService:
         Create payment for order
         
         Args:
-            order: Order object
+            order: Order object (must have user and items loaded)
             
         Returns:
             dict with payment_id and confirmation_url
         """
+        # Validate that relationships are loaded to avoid lazy loading errors
+        if not order.user:
+            raise Exception("Order must have user relationship loaded")
+        
+        if not order.items:
+            raise Exception("Order must have items relationship loaded")
+        
         payment_builder = PaymentRequestBuilder()
         
         payment_builder.set_amount({

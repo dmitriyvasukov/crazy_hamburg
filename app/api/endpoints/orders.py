@@ -25,10 +25,15 @@ async def get_orders(
     """
     Получить заказы текущего пользователя
     """
+    from sqlalchemy.orm import joinedload
+    
     query = db.query(Order).filter(Order.user_id == current_user.id)
     
     total = query.count()
-    orders = query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
+    # Use eager loading to avoid N+1 problem
+    orders = query.options(
+        joinedload(Order.items).joinedload("product")
+    ).order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
     
     return OrderListResponse(
         orders=orders,
@@ -47,7 +52,11 @@ async def get_order(
     """
     Получить заказ по ID
     """
-    order = db.query(Order).filter(Order.id == order_id).first()
+    from sqlalchemy.orm import joinedload
+    
+    order = db.query(Order).options(
+        joinedload(Order.items).joinedload("product")
+    ).filter(Order.id == order_id).first()
     
     if not order:
         raise HTTPException(
@@ -74,12 +83,15 @@ async def create_order(
     """
     Создать новый заказ
     """
+    from sqlalchemy import select
+    
     # Calculate total
     total_amount = 0
     order_items_data = []
     
     for item_data in order_data.items:
-        product = db.query(Product).filter(Product.id == item_data.product_id).first()
+        # Use SELECT FOR UPDATE to lock row and prevent race conditions
+        product = db.query(Product).filter(Product.id == item_data.product_id).with_for_update().first()
         
         if not product:
             raise HTTPException(

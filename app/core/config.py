@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "dwc_shop"
     
     # Security
-    SECRET_KEY: str = "your-secret-key-change-in-production"
+    SECRET_KEY: str = "dwc-secret-key-change-this-in-production-12345678"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_HOURS: int = 24
     
